@@ -239,29 +239,62 @@ function HomeCheck:OptionsPanel()
                                 end
                             end
                         },
-                        targetPosition = {
-                            name = L["Target position"],
+                        targetXPosition = {
+                            name = L["Target X position"],
                             type = "select",
                             values = {
                                 l = L["Left"],
+                                c = L["Center"],
                                 r = L["Right"],
-                                c = L["Center"]
                             },
                             order = 11,
-                            get = function()
-                                return self.db.profile[i].targetPosition or "c"
-                            end,
+                            get = function() return self.db.profile[i].targetXPosition or "c" end,
                             set = function(_, val)
-                                self.db.profile[i].targetPosition = val
-                                for j = 1, #self.groups do
-                                    if j == i or self.db.profile[j].inherit == i then
-                                        for k = 1, #self.groups[j].CooldownFrames do
-                                            self:setTimerPosition(self.groups[j].CooldownFrames[k])
-                                        end
-                                    end
-                                end
-                            end
+                                self.db.profile[i].targetXPosition = val
+                                self:updateTargetPositions(i)
+                            end,
                         },
+
+                        targetYPosition = {
+                            name = L["Target Y position"],
+                            type = "select",
+                            values = {
+                                t = L["Top"],
+                                c = L["Center"],
+                                b = L["Bottom"],
+                            },
+                            order = 12,
+                            get = function() return self.db.profile[i].targetYPosition or "c" end,
+                            set = function(_, val)
+                                self.db.profile[i].targetYPosition = val
+                                self:updateTargetPositions(i)
+                            end,
+                        },
+
+                        targetXOffset = {
+                            name = L["Target X offset"],
+                            type = "range",
+                            min = -50, max = 50, step = 1,
+                            order = 13,
+                            get = function() return self.db.profile[i].targetXOffset or 0 end,
+                            set = function(_, val)
+                                self.db.profile[i].targetXOffset = val
+                                self:updateTargetPositions(i)
+                            end,
+                        },
+
+                        targetYOffset = {
+                            name = L["Target Y offset"],
+                            type = "range",
+                            min = -50, max = 50, step = 1,
+                            order = 14,
+                            get = function() return self.db.profile[i].targetYOffset or 0 end,
+                            set = function(_, val)
+                                self.db.profile[i].targetYOffset = val
+                                self:updateTargetPositions(i)
+                            end,
+                        },
+
                         timerPosition = {
                             name = L["Timer position"],
                             type = "select",

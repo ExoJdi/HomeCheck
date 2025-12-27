@@ -42,7 +42,12 @@ HomeCheck.defaults = {
             opacity = 0.65,
             background = { 0.14, 0.14, 0.14, 0.6 },
             timerPosition = "r",
-            targetJustify = "r",
+            -- Target text placement defaults.  X position can be 'l', 'c' or 'r'; Y position can be 't', 'c' or 'b'.
+            -- Offset values allow fine tuning of the target text location relative to its anchor.
+            targetXPosition = "c",
+            targetYPosition = "t",
+            targetXOffset = 0,
+            targetYOffset = 2,
             inherit = 1,
             rangeDimout = true,
             rangeUngroup = true,

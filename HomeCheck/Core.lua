@@ -1100,7 +1100,8 @@ function HomeCheck:applyGroupSettings(frame, groupIndex)
     frame:SetWidth(self:getIProp(groupIndex, "frameWidth"))
     frame.playerNameFontString:SetFont(self.LibSharedMedia:Fetch("font", self:getIProp(groupIndex, "fontPlayer")), self:getIProp(groupIndex, "fontSize"))
     frame.targetFontString:SetFont(self.LibSharedMedia:Fetch("font", self:getIProp(groupIndex, "fontTarget")), self:getIProp(groupIndex, "fontSizeTarget"))
-    frame.targetFontString:SetJustifyH(self:getIProp(groupIndex, "targetJustify") == "l" and "LEFT" or "RIGHT")
+    -- The target text alignment is now derived from the X position in setTargetPosition.
+    -- Do not set justify here to avoid overwriting the desired alignment.
     self:setBarTexture(frame, self.LibSharedMedia:Fetch("statusbar", self:getIProp(groupIndex, "statusbar")))
     self:setBarColor(frame)
     frame.bar.inactive:SetVertexColor(unpack(self:getIProp(groupIndex, "background")))
@@ -1166,7 +1167,7 @@ end
 function HomeCheck:setTimerPosition(frame)
     frame.timerFontString:ClearAllPoints()
     frame.playerNameFontString:ClearAllPoints()
-    frame.targetFontString:ClearAllPoints()
+    -- Do not clear the target position here; it is managed by setTargetPosition().
 
     -- timer
     if self:getIPropBySpellId(frame.spellID, "timerPosition") == "l" then
@@ -1190,36 +1191,34 @@ end
 function HomeCheck:setTargetPosition(frame)
     local group = self:getSpellGroup(frame.spellID)
 
+    -- Determine horizontal/vertical position codes.  If unspecified, fallback to defaults
+    -- (left/center/right: l/c/r, top/center/bottom: t/c/b).  Default Y position is "t" (top) to
+    -- approximate the original placement above the bar.
     local xPos = self:getIProp(group, "targetXPosition") or "c"
-    local yPos = self:getIProp(group, "targetYPosition") or "c"
+    local yPos = self:getIProp(group, "targetYPosition") or "t"
 
+    -- Offsets for fine tuning
     local xOff = self:getIProp(group, "targetXOffset") or 0
     local yOff = self:getIProp(group, "targetYOffset") or 0
 
+    -- Clear existing anchor points
     frame.targetFontString:ClearAllPoints()
 
-    -- Horizontal anchor
-    local pointX = ({
-        l = "LEFT",
-        c = "CENTER",
-        r = "RIGHT"
-    })[xPos] or "CENTER"
+    -- Map X/Y codes to WoW anchor points.  WoW accepts combinations of TOP|BOTTOM|CENTER and
+    -- LEFT|RIGHT|CENTER, but not concatenated strings like "TOPCENTER".  Use this table to
+    -- derive a valid anchor for any combination of xPos and yPos.
+    local pointMap = {
+        t = { l = "TOPLEFT",    c = "TOP",    r = "TOPRIGHT" },
+        c = { l = "LEFT",       c = "CENTER", r = "RIGHT"    },
+        b = { l = "BOTTOMLEFT", c = "BOTTOM", r = "BOTTOMRIGHT" }
+    }
 
-    -- Vertical anchor
-    local pointY = ({
-        t = "TOP",
-        c = "CENTER",
-        b = "BOTTOM"
-    })[yPos] or "CENTER"
+    local point = (pointMap[yPos] and pointMap[yPos][xPos]) or "TOP"
 
-    frame.targetFontString:SetPoint(
-        pointY .. pointX,
-        frame.bar,
-        pointY .. pointX,
-        xOff,
-        yOff
-    )
+    -- Anchor both relative and absolute points using the same anchor and offsets.
+    frame.targetFontString:SetPoint(point, frame.bar, point, xOff, yOff)
 
+    -- Align text horizontally based on xPos selection
     frame.targetFontString:SetJustifyH(
         xPos == "l" and "LEFT" or
         xPos == "r" and "RIGHT" or
